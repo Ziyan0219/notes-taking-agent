@@ -48,6 +48,34 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Setup templates
 templates = Jinja2Templates(directory="app/templates")
 
+def clean_markdown_for_pdf(markdown_content: str) -> str:
+    """Clean markdown content to make it compatible with PDF conversion"""
+    import re
+    
+    # Fix common LaTeX issues that cause KaTeX errors
+    cleaned_content = markdown_content
+    
+    # Remove or fix problematic LaTeX expressions
+    # Fix expressions like "!N" or "# train examples" in math mode
+    cleaned_content = re.sub(r'\$([^$]*[!#][^$]*)\$', lambda m: f'`{m.group(1)}`', cleaned_content)
+    
+    # Fix standalone symbols that cause issues
+    cleaned_content = re.sub(r'\$\s*!\s*([A-Za-z]+)\s*\$', r'`!\1`', cleaned_content)
+    cleaned_content = re.sub(r'\$\s*#\s*([^$]*)\s*\$', r'`# \1`', cleaned_content)
+    
+    # Fix empty or minimal math expressions
+    cleaned_content = re.sub(r'\$\s*\$', '', cleaned_content)
+    cleaned_content = re.sub(r'\$\s*([A-Za-z])\s*\$', r'`\1`', cleaned_content)
+    
+    # Fix expressions with special characters that KaTeX doesn't like
+    cleaned_content = re.sub(r'\$([^$]*[&%#][^$]*)\$', lambda m: f'`{m.group(1)}`', cleaned_content)
+    
+    # Clean up multiple spaces and empty lines
+    cleaned_content = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_content)
+    cleaned_content = re.sub(r'[ \t]+', ' ', cleaned_content)
+    
+    return cleaned_content
+
 # Configuration
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "./uploads"))
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
@@ -179,12 +207,15 @@ async def download_notes(job_id: str, format: str = "pdf"):
         # Export as Markdown first
         markdown_content = note_generator.export_to_markdown(notes)
         
-        # Create temporary markdown file
-        temp_md_file = Path(f"temp_notes_{job_id}.md")
-        with open(temp_md_file, 'w', encoding='utf-8') as f:
-            f.write(markdown_content)
-        
         if format.lower() == "pdf":
+            # Clean markdown content for PDF conversion
+            cleaned_markdown = clean_markdown_for_pdf(markdown_content)
+            
+            # Create temporary markdown file
+            temp_md_file = Path(f"temp_notes_{job_id}.md")
+            with open(temp_md_file, 'w', encoding='utf-8') as f:
+                f.write(cleaned_markdown)
+            
             # Convert markdown to PDF using manus utility
             temp_pdf_file = Path(f"temp_notes_{job_id}.pdf")
             
@@ -196,12 +227,27 @@ async def download_notes(job_id: str, format: str = "pdf"):
                 str(temp_pdf_file)
             ], capture_output=True, text=True)
             
-            if result.returncode != 0:
-                logger.error(f"PDF conversion failed: {result.stderr}")
-                raise HTTPException(status_code=500, detail="PDF conversion failed")
-            
             # Clean up markdown file
             temp_md_file.unlink(missing_ok=True)
+            
+            if result.returncode != 0:
+                logger.error(f"PDF conversion failed: {result.stderr}")
+                # Fallback: use weasyprint
+                try:
+                    html_content = markdown2.markdown(cleaned_markdown, extras=['tables', 'fenced-code-blocks'])
+                    css_style = """
+                    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
+                    h1, h2, h3 { color: #2c3e50; margin-top: 30px; }
+                    h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                    h2 { border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
+                    code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px; }
+                    pre { background-color: #f8f9fa; padding: 15px; border-radius: 5px; }
+                    """
+                    full_html = f"<html><head><style>{css_style}</style></head><body>{html_content}</body></html>"
+                    HTML(string=full_html).write_pdf(temp_pdf_file)
+                except Exception as fallback_error:
+                    logger.error(f"Fallback PDF generation failed: {fallback_error}")
+                    raise HTTPException(status_code=500, detail="PDF conversion failed")
             
             return FileResponse(
                 path=temp_pdf_file,
