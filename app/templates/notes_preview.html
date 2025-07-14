@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ notes.title }} - Notes Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .metadata-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .metadata-label {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .metadata-value {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .notes-content {
+            max-width: none;
+        }
+        
+        .notes-content h1,
+        .notes-content h2,
+        .notes-content h3,
+        .notes-content h4,
+        .notes-content h5,
+        .notes-content h6 {
+            color: #2c3e50;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+        
+        .notes-content h1 {
+            font-size: 2.2rem;
+            border-bottom-color: #3498db;
+        }
+        
+        .notes-content h2 {
+            font-size: 1.8rem;
+            border-bottom-color: #2ecc71;
+        }
+        
+        .notes-content h3 {
+            font-size: 1.5rem;
+            border-bottom-color: #f39c12;
+        }
+        
+        .notes-content h4 {
+            font-size: 1.3rem;
+            border-bottom-color: #e74c3c;
+        }
+        
+        .notes-content p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+        
+        .notes-content blockquote {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+        }
+        
+        .notes-content code {
+            background: #f1f2f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        
+        .notes-content pre {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .notes-content ul,
+        .notes-content ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .notes-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .notes-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .notes-content th,
+        .notes-content td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        .notes-content th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .formula-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .formula-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .formula-content {
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .exercise-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .exercise-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 1rem;
+        }
+        
+        .exercise-question {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .exercise-solution {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin-top: 1rem;
+        }
+        
+        .actions {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3498db;
+        }
+        
+        .toc h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: #3498db;
+            text-decoration: none;
+            padding: 0.25rem 0;
+            display: block;
+            border-radius: 3px;
+            padding-left: 1rem;
+        }
+        
+        .toc a:hover {
+            background: #ecf0f1;
+            color: #2980b9;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .metadata {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Math rendering */
+        .math {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                max-width: none;
+                padding: 0;
+            }
+            
+            .header,
+            .content,
+            .actions {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .actions {
+                display: none;
+            }
+        }
+    </style>
+    <!-- MathJax for formula rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ notes.title }}</h1>
+            
+            <div class="metadata">
+                <div class="metadata-item">
+                    <div class="metadata-label">Source File</div>
+                    <div class="metadata-value">{{ notes.source_filename }}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Generated</div>
+                    <div class="metadata-value">{{ notes.created_at }}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Sections</div>
+                    <div class="metadata-value">{{ notes.sections|length }}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Total Formulas</div>
+                    <div class="metadata-value">{{ notes.metadata.get('total_formulas', 0) }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ notes.sections|length }}</div>
+                <div class="stat-label">Topics</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ notes.metadata.get('total_formulas', 0) }}</div>
+                <div class="stat-label">Formulas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ notes.metadata.get('total_exercises', 0) }}</div>
+                <div class="stat-label">Exercises</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ notes.comprehensive_exercises|length }}</div>
+                <div class="stat-label">Comprehensive</div>
+            </div>
+        </div>
+        
+        <!-- Table of Contents -->
+        {% if notes.sections|length > 1 %}
+        <div class="toc">
+            <h3>📋 Table of Contents</h3>
+            <ul>
+                {% for section in notes.sections %}
+                <li><a href="#section-{{ section.order }}">{{ section.order }}. {{ section.title }}</a></li>
+                {% endfor %}
+                {% if notes.comprehensive_exercises %}
+                <li><a href="#comprehensive">Comprehensive Exercises</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Notes Content -->
+        <div class="content">
+            <div class="notes-content">
+                <!-- Summary -->
+                <h2>📖 Summary</h2>
+                <p>{{ notes.summary }}</p>
+                
+                <!-- Sections -->
+                {% for section in notes.sections %}
+                <div id="section-{{ section.order }}">
+                    {{ section.content | safe }}
+                    
+                    <!-- Exercises for this section -->
+                    {% if section.exercises %}
+                    <h4>🧠 Practice Exercises</h4>
+                    {% for exercise in section.exercises %}
+                    <div class="exercise-box">
+                        <div class="exercise-title">
+                            Exercise {{ loop.index }} 
+                            {% for i in range(exercise.difficulty) %}⭐{% endfor %}
+                        </div>
+                        <div class="exercise-question">{{ exercise.question }}</div>
+                        {% if exercise.solution %}
+                        <details>
+                            <summary style="cursor: pointer; color: #28a745; font-weight: bold;">💡 Solution Approach</summary>
+                            <div class="exercise-solution">{{ exercise.solution }}</div>
+                        </details>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <!-- Comprehensive Exercises -->
+                {% if notes.comprehensive_exercises %}
+                <div id="comprehensive">
+                    <h2>🎯 Comprehensive Exercises</h2>
+                    <p><em>These exercises combine concepts from multiple topics to test integrated understanding.</em></p>
+                    
+                    {% for exercise in notes.comprehensive_exercises %}
+                    <div class="exercise-box" style="background: #e8f5e8; border-color: #28a745;">
+                        <div class="exercise-title" style="color: #155724;">
+                            Comprehensive Exercise {{ loop.index }}
+                            {% for i in range(exercise.difficulty) %}⭐{% endfor %}
+                        </div>
+                        <div class="exercise-question">{{ exercise.question }}</div>
+                        {% if exercise.solution %}
+                        <div class="exercise-solution">
+                            <strong>Solution Approach:</strong><br>
+                            {{ exercise.solution }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="actions">
+            <h3>📥 Download Options</h3>
+            <p>Choose your preferred format to download the generated notes:</p>
+            
+            <a href="/download/{{ notes.id }}?format=markdown" class="btn" download>
+                📄 Download as Markdown
+            </a>
+            <a href="/download/{{ notes.id }}?format=json" class="btn btn-secondary" download>
+                📋 Download as JSON
+            </a>
+            
+            <div style="margin-top: 1rem;">
+                <a href="/" class="btn btn-secondary">
+                    🏠 Back to Home
+                </a>
+                <button onclick="window.print()" class="btn btn-secondary">
+                    🖨️ Print Notes
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Smooth scrolling for table of contents
+        document.querySelectorAll('.toc a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Auto-cleanup temporary files after download
+        document.querySelectorAll('a[download]').forEach(link => {
+            link.addEventListener('click', function() {
+                // Optional: Add analytics or cleanup logic
+                console.log('Download started:', this.href);
+            });
+        });
+    </script>
+</body>
+</html>
+
