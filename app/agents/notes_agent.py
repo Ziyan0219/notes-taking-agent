@@ -176,8 +176,24 @@ class NotesAgent:
         state.current_step = "generating_notes"
         
         try:
-            if not state.topics or not state.formulas:
-                raise ValueError("Missing topics or formulas")
+            if not state.topics and not state.formulas:
+                # Create basic notes even without topics/formulas
+                logger.warning("No topics or formulas found, creating basic notes from PDF content")
+                basic_content = self._create_basic_notes_from_pdf(state.pdf_content)
+                
+                notes = GeneratedNotes(
+                    id=generate_unique_id(),
+                    title=f"Study Notes - {state.metadata['filename']}",
+                    content=basic_content,
+                    sections=[],
+                    metadata={
+                        "source_file": state.metadata["filename"],
+                        "generation_method": "basic",
+                        "created_at": get_timestamp()
+                    }
+                )
+                state.notes = notes
+                return state
             
             # Convert to format expected by enhanced generator
             topics_data = [
@@ -187,22 +203,26 @@ class NotesAgent:
                     "importance": getattr(topic, 'importance', 'medium')
                 }
                 for topic in state.topics
-            ]
+            ] if state.topics else []
             
             formulas_data = [
                 {
                     "name": formula.name,
                     "latex": formula.latex,
-                    "explanation": formula.explanation,
+                    "explanation": getattr(formula, 'derivation', ''),
                     "context": getattr(formula, 'context', '')
                 }
                 for formula in state.formulas
-            ]
+            ] if state.formulas else []
             
             # Use enhanced note generator
-            markdown_content = self.enhanced_note_generator.generate_quality_notes(
-                topics_data, formulas_data, state.metadata["filename"]
-            )
+            try:
+                markdown_content = self.enhanced_note_generator.generate_quality_notes(
+                    topics_data, formulas_data, state.metadata["filename"]
+                )
+            except Exception as e:
+                logger.warning(f"Enhanced note generation failed: {e}, falling back to basic generation")
+                markdown_content = self._create_fallback_notes(topics_data, formulas_data, state.metadata["filename"])
             
             # Create GeneratedNotes object
             notes = GeneratedNotes(
@@ -223,7 +243,26 @@ class NotesAgent:
             
         except Exception as e:
             logger.error(f"Error generating notes: {e}")
-            state.error = f"Notes generation failed: {str(e)}"
+            # Create minimal notes to prevent complete failure
+            try:
+                fallback_content = self._create_emergency_fallback_notes(state)
+                notes = GeneratedNotes(
+                    id=generate_unique_id(),
+                    title=f"Study Notes - {state.metadata['filename']}",
+                    content=fallback_content,
+                    sections=[],
+                    metadata={
+                        "source_file": state.metadata["filename"],
+                        "generation_method": "emergency_fallback",
+                        "created_at": get_timestamp(),
+                        "error": str(e)
+                    }
+                )
+                state.notes = notes
+                logger.info("Created emergency fallback notes")
+            except Exception as fallback_error:
+                logger.error(f"Emergency fallback also failed: {fallback_error}")
+                state.error = f"Notes generation failed: {str(e)}"
         
         return state
     
@@ -637,4 +676,82 @@ Return your response in JSON format:
             summary_parts.append(f"\nAdditionally, {comprehensive_count} comprehensive exercises are provided to test integrated understanding.")
         
         return "\n".join(summary_parts)
+    
+    def _create_basic_notes_from_pdf(self, pdf_content: PDFContent) -> str:
+        """Create basic notes directly from PDF content when topic/formula extraction fails"""
+        
+        if not pdf_content or not pdf_content.text:
+            return "# Study Notes\n\nNo content could be extracted from the PDF file."
+        
+        # Create a simple markdown structure
+        content = f"""# Study Notes
+
+## Document Summary
+This document contains {pdf_content.pages} pages of content.
+
+## Content Overview
+{pdf_content.text[:1000]}{'...' if len(pdf_content.text) > 1000 else ''}
+
+## Additional Information
+- Total pages: {pdf_content.pages}
+- Text length: {len(pdf_content.text)} characters
+- Images found: {len(pdf_content.images)}
+- Tables found: {len(pdf_content.tables)}
+
+*Note: This is a basic extraction. For better structured notes, please ensure the PDF contains clear headings and mathematical formulas.*
+"""
+        return content
+    
+    def _create_fallback_notes(self, topics_data: List[Dict], formulas_data: List[Dict], filename: str) -> str:
+        """Create fallback notes when enhanced generation fails"""
+        
+        content = [f"# Study Notes - {filename}\n"]
+        
+        if topics_data:
+            content.append("## Topics\n")
+            for i, topic in enumerate(topics_data, 1):
+                content.append(f"### {i}. {topic['title']}\n")
+                content.append(f"{topic['content']}\n")
+        
+        if formulas_data:
+            content.append("## Formulas\n")
+            for i, formula in enumerate(formulas_data, 1):
+                content.append(f"### {i}. {formula['name']}\n")
+                content.append(f"**Formula**: ${formula['latex']}$\n")
+                if formula['explanation']:
+                    content.append(f"**Explanation**: {formula['explanation']}\n")
+                content.append("")
+        
+        if not topics_data and not formulas_data:
+            content.append("## Content\n")
+            content.append("No structured topics or formulas could be extracted from this document.\n")
+        
+        return "\n".join(content)
+    
+    def _create_emergency_fallback_notes(self, state: AgentState) -> str:
+        """Create minimal notes as last resort"""
+        
+        filename = state.metadata.get("filename", "Unknown")
+        
+        content = f"""# Study Notes - {filename}
+
+## Processing Status
+This document was processed but encountered errors during structured analysis.
+
+## Available Information
+"""
+        
+        if state.pdf_content:
+            content += f"- Document has {state.pdf_content.pages} pages\n"
+            content += f"- Extracted {len(state.pdf_content.text)} characters of text\n"
+        
+        if state.topics:
+            content += f"- Found {len(state.topics)} topics\n"
+        
+        if state.formulas:
+            content += f"- Found {len(state.formulas)} formulas\n"
+        
+        content += "\n*Please try processing the document again or check the PDF format.*\n"
+        
+        return content
 

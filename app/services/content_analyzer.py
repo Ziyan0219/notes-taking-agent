@@ -110,12 +110,15 @@ class ContentAnalyzer:
                 match = re.match(pattern, line, re.IGNORECASE)
                 if match:
                     try:
+                        groups = match.groups()
                         if topic_type == TopicType.CHAPTER:
-                            title = match.group(2).strip() if len(match.groups()) >= 2 else match.group(1).strip()
-                        elif len(match.groups()) >= 3:  # Numbered subsection
-                            title = match.group(3).strip()
+                            title = groups[1].strip() if len(groups) >= 2 else groups[0].strip()
+                        elif len(groups) >= 3:  # Numbered subsection
+                            title = groups[2].strip()
+                        elif len(groups) >= 1:
+                            title = groups[-1].strip()  # Last group
                         else:
-                            title = match.group(-1).strip()  # Last group
+                            title = match.group(0).strip()  # Fallback to full match
                         
                         if len(title) > 2 and not title.isdigit():
                             # Extract content for this topic (simplified)
