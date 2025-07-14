@@ -96,8 +96,10 @@ class ContentAnalyzer:
             # Track page numbers
             if line.startswith('--- Page '):
                 try:
-                    current_page = int(re.search(r'--- Page (\d+) ---', line).group(1))
-                except:
+                    page_match = re.search(r'--- Page (\d+) ---', line)
+                    if page_match:
+                        current_page = int(page_match.group(1))
+                except (AttributeError, ValueError):
                     pass
                 continue
             
@@ -107,28 +109,32 @@ class ContentAnalyzer:
             for pattern, level, topic_type in patterns:
                 match = re.match(pattern, line, re.IGNORECASE)
                 if match:
-                    if topic_type == TopicType.CHAPTER:
-                        title = match.group(2).strip()
-                    elif len(match.groups()) == 3:  # Numbered subsection
-                        title = match.group(3).strip()
-                    else:
-                        title = match.group(-1).strip()  # Last group
-                    
-                    if len(title) > 2 and not title.isdigit():
-                        # Extract content for this topic (simplified)
-                        content = self._extract_topic_content(lines, line_num, 50)
+                    try:
+                        if topic_type == TopicType.CHAPTER:
+                            title = match.group(2).strip() if len(match.groups()) >= 2 else match.group(1).strip()
+                        elif len(match.groups()) >= 3:  # Numbered subsection
+                            title = match.group(3).strip()
+                        else:
+                            title = match.group(-1).strip()  # Last group
                         
-                        topics.append(Topic(
-                            id=f"topic_{topic_id}",
-                            title=title,
-                            type=topic_type,
-                            level=level,
-                            parent_id=None,  # Will be set later
-                            content=content,
-                            page_range=(current_page, current_page),
-                            keywords=self._extract_keywords(content)
-                        ))
-                        topic_id += 1
+                        if len(title) > 2 and not title.isdigit():
+                            # Extract content for this topic (simplified)
+                            content = self._extract_topic_content(lines, line_num, 50)
+                            
+                            topics.append(Topic(
+                                id=f"topic_{topic_id}",
+                                title=title,
+                                type=topic_type,
+                                level=level,
+                                parent_id=None,  # Will be set later
+                                content=content,
+                                page_range=(current_page, current_page),
+                                keywords=self._extract_keywords(content)
+                            ))
+                            topic_id += 1
+                    except (AttributeError, IndexError) as e:
+                        logger.warning(f"Error processing topic match: {e}")
+                        continue
                     break
         
         # Set parent relationships

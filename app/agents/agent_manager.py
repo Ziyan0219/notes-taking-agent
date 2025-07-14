@@ -102,20 +102,38 @@ class AgentManager:
             # Process the PDF
             final_state = await agent.process_pdf(file_path, filename)
             
-            # Check for errors
-            if final_state.error:
-                self._handle_processing_error(job_id, final_state.error)
+            # Check for errors - handle both dict and object formats
+            error_message = None
+            if isinstance(final_state, dict):
+                error_message = final_state.get('error')
+            elif hasattr(final_state, 'error'):
+                error_message = final_state.error
+            
+            if error_message:
+                self._handle_processing_error(job_id, error_message)
                 return
             
             # Save results
             processing_time = self._calculate_processing_time(job_id)
+            
+            # Get notes from final_state - handle both dict and object formats
+            notes = None
+            notes_id = None
+            if isinstance(final_state, dict):
+                notes = final_state.get('notes')
+                if notes:
+                    notes_id = notes.get('id') if isinstance(notes, dict) else getattr(notes, 'id', None)
+            elif hasattr(final_state, 'notes'):
+                notes = final_state.notes
+                if notes:
+                    notes_id = getattr(notes, 'id', None)
             
             result = ProcessingResult(
                 status=ProcessingStatus.COMPLETED,
                 filename=filename,
                 progress=100,
                 message="Processing completed successfully",
-                notes_id=final_state.notes.id if final_state.notes else None,
+                notes_id=notes_id,
                 processing_time=processing_time
             )
             
@@ -125,8 +143,8 @@ class AgentManager:
             self._update_job_status(job_id, ProcessingStatus.COMPLETED, 100, "Processing completed")
             
             # Save notes to file
-            if final_state.notes:
-                await self._save_notes_to_file(final_state.notes, job_id)
+            if notes:
+                await self._save_notes_to_file(notes, job_id)
             
             logger.info(f"Processing job {job_id} completed successfully")
             
