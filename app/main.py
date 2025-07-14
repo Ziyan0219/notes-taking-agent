@@ -12,7 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from dotenv import load_dotenv
 import logging
-
+import markdown2
+from weasyprint import HTML
 from app.agents.agent_manager import AgentManager
 from app.services.note_generator import NoteGenerator
 from app.models.schemas import ProcessRequest, StatusResponse, UploadResponse

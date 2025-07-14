@@ -4,7 +4,7 @@ Agent Manager for coordinating the notes generation process
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any, Optional, Callable, List
 from pathlib import Path
 import json
 from datetime import datetime

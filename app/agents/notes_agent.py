@@ -3,12 +3,12 @@ LangGraph Agent for PDF to Notes conversion
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, List
 from pathlib import Path
 import json
 
 from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolExecutor
+from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
 
