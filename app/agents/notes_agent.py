@@ -18,6 +18,7 @@ from app.models.schemas import (
 )
 from app.services.pdf_parser import PDFParser
 from app.services.content_analyzer import ContentAnalyzer
+from app.services.enhanced_note_generator import EnhancedNoteGenerator
 from app.utils.helpers import generate_unique_id, get_timestamp
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ class NotesAgent:
         
         self.pdf_parser = PDFParser()
         self.content_analyzer = ContentAnalyzer(self.openai_client)
+        self.enhanced_note_generator = EnhancedNoteGenerator()
         
         # Build the agent graph
         self.graph = self._build_graph()
@@ -168,7 +170,7 @@ class NotesAgent:
         return state
     
     def _generate_notes_node(self, state: AgentState) -> AgentState:
-        """Generate structured notes"""
+        """Generate structured notes using enhanced generator"""
         
         logger.info("Generating structured notes...")
         state.current_step = "generating_notes"
@@ -177,10 +179,47 @@ class NotesAgent:
             if not state.topics or not state.formulas:
                 raise ValueError("Missing topics or formulas")
             
-            notes = self._create_structured_notes(state.topics, state.formulas, state.metadata["filename"])
+            # Convert to format expected by enhanced generator
+            topics_data = [
+                {
+                    "title": topic.title,
+                    "content": topic.content,
+                    "importance": getattr(topic, 'importance', 'medium')
+                }
+                for topic in state.topics
+            ]
+            
+            formulas_data = [
+                {
+                    "name": formula.name,
+                    "latex": formula.latex,
+                    "explanation": formula.explanation,
+                    "context": getattr(formula, 'context', '')
+                }
+                for formula in state.formulas
+            ]
+            
+            # Use enhanced note generator
+            markdown_content = self.enhanced_note_generator.generate_quality_notes(
+                topics_data, formulas_data, state.metadata["filename"]
+            )
+            
+            # Create GeneratedNotes object
+            notes = GeneratedNotes(
+                id=generate_unique_id(),
+                title=f"Study Notes - {state.metadata['filename']}",
+                content=markdown_content,
+                sections=[],  # Enhanced generator handles structure internally
+                metadata={
+                    "source_file": state.metadata["filename"],
+                    "generation_method": "enhanced",
+                    "created_at": get_timestamp()
+                }
+            )
+            
             state.notes = notes
             
-            logger.info(f"Generated notes with {len(notes.sections)} sections")
+            logger.info(f"Generated enhanced notes for {state.metadata['filename']}")
             
         except Exception as e:
             logger.error(f"Error generating notes: {e}")

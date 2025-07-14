@@ -312,6 +312,13 @@ class NoteGenerator:
     def export_to_markdown(self, notes: GeneratedNotes) -> str:
         """Export notes to Markdown format"""
         
+        # Check if this is enhanced content (already formatted)
+        if (hasattr(notes, 'metadata') and 
+            notes.metadata.get('generation_method') == 'enhanced'):
+            # Enhanced generator already provides complete markdown
+            return notes.content
+        
+        # Legacy format handling
         markdown_parts = []
         
         # Title and metadata
