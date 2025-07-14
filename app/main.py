@@ -161,8 +161,8 @@ async def get_processing_status(job_id: str):
 
 
 @app.get("/download/{job_id}")
-async def download_notes(job_id: str, format: str = "markdown"):
-    """Download generated notes"""
+async def download_notes(job_id: str, format: str = "pdf"):
+    """Download generated notes as PDF"""
     
     result = agent_manager.get_job_status(job_id)
     
@@ -175,38 +175,49 @@ async def download_notes(job_id: str, format: str = "markdown"):
         raise HTTPException(status_code=404, detail="Notes not available")
     
     try:
-        if format.lower() == "markdown":
-            # Export as Markdown
-            markdown_content = note_generator.export_to_markdown(notes)
+        # Export as Markdown first
+        markdown_content = note_generator.export_to_markdown(notes)
+        
+        # Create temporary markdown file
+        temp_md_file = Path(f"temp_notes_{job_id}.md")
+        with open(temp_md_file, 'w', encoding='utf-8') as f:
+            f.write(markdown_content)
+        
+        if format.lower() == "pdf":
+            # Convert markdown to PDF using manus utility
+            temp_pdf_file = Path(f"temp_notes_{job_id}.pdf")
             
-            # Save to temporary file
-            temp_file = Path(f"temp_notes_{job_id}.md")
-            with open(temp_file, 'w', encoding='utf-8') as f:
-                f.write(markdown_content)
+            # Use manus-md-to-pdf utility
+            import subprocess
+            result = subprocess.run([
+                "manus-md-to-pdf", 
+                str(temp_md_file), 
+                str(temp_pdf_file)
+            ], capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                logger.error(f"PDF conversion failed: {result.stderr}")
+                raise HTTPException(status_code=500, detail="PDF conversion failed")
+            
+            # Clean up markdown file
+            temp_md_file.unlink(missing_ok=True)
             
             return FileResponse(
-                path=temp_file,
+                path=temp_pdf_file,
+                filename=f"{notes.title.replace(' ', '_')}.pdf",
+                media_type="application/pdf"
+            )
+            
+        elif format.lower() == "markdown":
+            # Return markdown file
+            return FileResponse(
+                path=temp_md_file,
                 filename=f"{notes.title.replace(' ', '_')}.md",
                 media_type="text/markdown"
             )
             
-        elif format.lower() == "json":
-            # Export as JSON
-            json_content = note_generator.export_to_json(notes)
-            
-            # Save to temporary file
-            temp_file = Path(f"temp_notes_{job_id}.json")
-            with open(temp_file, 'w', encoding='utf-8') as f:
-                f.write(json_content)
-            
-            return FileResponse(
-                path=temp_file,
-                filename=f"{notes.title.replace(' ', '_')}.json",
-                media_type="application/json"
-            )
-            
         else:
-            raise HTTPException(status_code=400, detail="Unsupported format. Use 'markdown' or 'json'")
+            raise HTTPException(status_code=400, detail="Unsupported format. Use 'pdf' or 'markdown'")
             
     except Exception as e:
         logger.error(f"Error generating download: {e}")
