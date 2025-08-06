@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实战笔记生成器</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-section {
+            padding: 3rem;
+        }
+        
+        .upload-area {
+            border: 3px dashed #e1e8ed;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f1f5ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e6f3ff;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 1rem;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .config-section {
+            background: #f8fafc;
+            padding: 2rem;
+            border-top: 1px solid #e1e8ed;
+        }
+        
+        .config-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .config-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .config-item label {
+            font-weight: 500;
+        }
+        
+        .api-input {
+            padding: 0.5rem;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 0.9rem;
+        }
+        
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+        
+        .system-status {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+        
+        .status-available {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        
+        .status-unavailable {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+        
+        .progress-section {
+            padding: 2rem;
+            background: #f8fafc;
+            border-top: 1px solid #e1e8ed;
+            display: none;
+        }
+        
+        .progress-bar {
+            background: #e1e8ed;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .jobs-section {
+            margin-top: 2rem;
+        }
+        
+        .jobs-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .jobs-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .job-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+        
+        .job-item:hover {
+            background: #f8fafc;
+        }
+        
+        .job-item:last-child {
+            border-bottom: none;
+        }
+        
+        .job-info {
+            flex: 1;
+        }
+        
+        .job-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .job-meta {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .job-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 1rem;
+        }
+        
+        .status-completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .status-processing {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-failed {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .view-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+        
+        .view-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .upload-section {
+                padding: 2rem 1rem;
+            }
+            
+            .config-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .api-input {
+                width: 100%;
+            }
+            
+            .job-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-book-open"></i> 实战笔记生成器</h1>
+            <p>上传PDF，生成实战导向的可视化学习笔记</p>
+        </div>
+        
+        <div class="main-card">
+            <div class="upload-section">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <div class="upload-text">
+                            点击上传或拖拽PDF文件到此处
+                        </div>
+                        <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                        <button type="button" class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-plus"></i> 选择文件
+                        </button>
+                        <div style="margin-top: 1rem; color: #6b7280; font-size: 0.9rem;">
+                            支持最大50MB的PDF文件
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="config-section">
+                <div class="config-row">
+                    <div class="config-item">
+                        <label for="apiKey">OpenAI API Key:</label>
+                        <input type="password" id="apiKey" class="api-input" placeholder="sk-... (可选，留空使用示例数据)">
+                    </div>
+                    <div class="config-item">
+                        <input type="checkbox" id="useGpt4" class="checkbox">
+                        <label for="useGpt4">使用GPT-4 (更高质量)</label>
+                    </div>
+                </div>
+                
+                <div class="system-status {% if system_available %}status-available{% else %}status-unavailable{% endif %}">
+                    <i class="fas fa-info-circle"></i>
+                    {% if system_available %}
+                        <strong>系统状态:</strong> AI处理功能可用。提供API Key可使用完整功能，否则使用示例数据演示。
+                    {% else %}
+                        <strong>演示模式:</strong> AI处理功能未安装，将使用示例数据生成笔记。
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="progress-section" id="progressSection">
+                <div id="progressMessage">准备处理...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div style="text-align: center;">
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="jobs-section">
+            <div class="jobs-card">
+                <div class="jobs-header">
+                    <h2><i class="fas fa-history"></i> 处理历史</h2>
+                </div>
+                <div id="jobsList">
+                    <div style="padding: 2rem; text-align: center; color: #6b7280;">
+                        暂无处理记录
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentJobId = null;
+        
+        // 文件上传处理
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+        const progressSection = document.getElementById('progressSection');
+        
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileUpload();
+            }
+        });
+        
+        fileInput.addEventListener('change', handleFileUpload);
+        
+        function handleFileUpload() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('请选择PDF文件');
+                return;
+            }
+            
+            if (file.size > 50 * 1024 * 1024) {
+                alert('文件过大，最大支持50MB');
+                return;
+            }
+            
+            uploadFile(file);
+        }
+        
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('api_key', document.getElementById('apiKey').value);
+            formData.append('use_gpt4', document.getElementById('useGpt4').checked);
+            
+            try {
+                progressSection.style.display = 'block';
+                updateProgress(5, '上传文件中...');
+                
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentJobId = result.job_id;
+                    pollJobStatus(currentJobId);
+                } else {
+                    alert('上传失败: ' + result.detail);
+                    progressSection.style.display = 'none';
+                }
+            } catch (error) {
+                alert('上传错误: ' + error.message);
+                progressSection.style.display = 'none';
+            }
+        }
+        
+        function updateProgress(percent, message) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent + '%';
+            document.getElementById('progressMessage').textContent = message;
+        }
+        
+        async function pollJobStatus(jobId) {
+            try {
+                const response = await fetch(`/status/${jobId}`);
+                const status = await response.json();
+                
+                updateProgress(status.progress, status.message);
+                
+                if (status.status === 'completed') {
+                    updateProgress(100, '处理完成！');
+                    setTimeout(() => {
+                        window.location.href = `/notes/${jobId}`;
+                    }, 1000);
+                } else if (status.status === 'failed') {
+                    updateProgress(0, '处理失败: ' + status.message);
+                } else {
+                    // 继续轮询
+                    setTimeout(() => pollJobStatus(jobId), 2000);
+                }
+            } catch (error) {
+                console.error('获取状态失败:', error);
+                setTimeout(() => pollJobStatus(jobId), 5000);
+            }
+        }
+        
+        // 加载处理历史
+        async function loadJobs() {
+            try {
+                const response = await fetch('/jobs');
+                const data = await response.json();
+                
+                const jobsList = document.getElementById('jobsList');
+                
+                if (data.jobs.length === 0) {
+                    jobsList.innerHTML = '<div style="padding: 2rem; text-align: center; color: #6b7280;">暂无处理记录</div>';
+                    return;
+                }
+                
+                jobsList.innerHTML = data.jobs.map(job => `
+                    <div class="job-item">
+                        <div class="job-info">
+                            <div class="job-title">${job.title || job.filename}</div>
+                            <div class="job-meta">
+                                ${new Date(job.created_at).toLocaleString()} • ${job.filename}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="job-status status-${job.status}">${getStatusText(job.status)}</span>
+                            ${job.status === 'completed' ? `<a href="/notes/${job.job_id}" class="view-btn">查看笔记</a>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('加载历史失败:', error);
+            }
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '等待中',
+                'processing': '处理中',
+                'completed': '已完成',
+                'failed': '失败'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 页面加载时获取历史记录
+        document.addEventListener('DOMContentLoaded', loadJobs);
+        
+        // 定期刷新历史记录
+        setInterval(loadJobs, 30000);
+    </script>
+</body>
+</html>

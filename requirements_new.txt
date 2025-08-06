@@ -1,0 +1,52 @@
+# 实战笔记生成器 - 新系统依赖
+
+# ===== 核心依赖 (必需) =====
+# 基础功能，无AI调用
+# (无额外依赖，仅使用Python内置模块)
+
+# ===== AI功能依赖 (可选) =====
+# 如需AI生成笔记功能
+openai>=1.0.0                 # OpenAI API客户端
+
+# ===== PDF处理依赖 (可选) =====  
+# 如需处理真实PDF文件
+PyMuPDF>=1.23.0              # PDF解析和处理
+# 备选方案:
+# pdfplumber>=0.10.0         # 另一种PDF处理库
+
+# ===== 环境配置 (可选) =====
+python-dotenv>=1.0.0         # 环境变量管理
+
+# ===== Web界面依赖 (原系统) =====
+# 仅在使用原Web界面时需要
+fastapi>=0.104.0             # Web框架
+uvicorn>=0.24.0              # ASGI服务器
+python-multipart>=0.0.6      # 文件上传支持
+jinja2>=3.1.0                # 模板引擎
+aiofiles>=23.0.0             # 异步文件操作
+
+# ===== 原LangGraph系统依赖 (可选) =====
+# 仅在使用原复杂系统时需要
+# langgraph>=0.0.40
+# langchain>=0.1.0
+# langchain-openai>=0.1.0
+
+# ===== 开发和测试 (开发者) =====
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.0.0
+
+# ===== 安装说明 =====
+# 
+# 1. 最小安装 (仅测试功能):
+#    不需要安装任何依赖，直接运行
+# 
+# 2. AI功能安装:
+#    pip install openai
+# 
+# 3. 完整功能安装:
+#    pip install openai PyMuPDF python-dotenv
+# 
+# 4. 原Web系统安装:
+#    pip install -r requirements.txt
+#

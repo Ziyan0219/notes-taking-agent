@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线性代数基础</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.4;
+            margin: 20px;
+            font-size: 14px;
+        }
+        .header {
+            border-bottom: 2px solid #007acc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .concept-card {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .formula-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .example-box {
+            background: #e7f3ff;
+            border-left: 4px solid #007acc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .tip {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .compact {
+            margin: 5px 0;
+        }
+        h1 { color: #333; font-size: 24px; }
+        h2 { color: #007acc; font-size: 18px; border-bottom: 1px solid #ddd; }
+        h3 { color: #666; font-size: 16px; }
+    </style>
+</head>
+<body>
+<p><h1>线性代数基础</h1></p>
+<p><h2>📊 内容概览</h2>
+| 项目 | 数量 | 说明 |
+|------|------|------|
+| 核心概念 | 2 | 必须掌握的基本概念 |
+| 重要公式 | 2 | 做题必备公式清单 |
+| 标准例题 | 2 | 本科难度练习题 |</p>
+<p>> 🎯 **学习目标**: 快速掌握核心概念，熟练运用公式解题</p>
+<p><h2>🧠 核心概念速览</h2></p>
+<p><h3>1. 矩阵</h3></p>
+<p>**💡 为什么重要**: 线性代数的基础数据结构，用于表示线性变换</p>
+<p>**🎯 核心思想**: 数字的矩形阵列，可以进行特定的数学运算</p>
+<p>**🔧 什么时候用**: 线性变换、方程组求解、数据处理</p>
+<p>---</p>
+<p><h3>2. 行列式</h3></p>
+<p>**💡 为什么重要**: 衡量矩阵的'大小'，判断矩阵可逆性</p>
+<p>**🎯 核心思想**: 矩阵的一个标量属性</p>
+<p>**🔧 什么时候用**: 判断矩阵可逆、计算体积变化、求解线性方程组</p>
+<p>---</p>
+<p></p>
+<p><h2>📐 公式速查表</h2></p>
+<p>> 💡 **使用提示**: 做题时先判断题型，再选择对应公式</p>
+<p><h3>1. 2×2矩阵行列式</h3></p>
+<p>**公式**: $\det(A) = \begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc$</p>
+<p>**变量说明**:
+<ul><li>$a,b,c,d$: 矩阵元素</li></ul>
+<ul><li>$det(A)$: 矩阵A的行列式</p></li></ul>
+<p>**使用场景**:
+<ul><li>判断2×2矩阵可逆性</li></ul>
+<ul><li>计算面积变化</p></li></ul>
+<p>**常见变形**:
+<ul><li>$|A| = ad - bc$</p></li></ul>
+<p>---</p>
+<p><h3>2. 矩阵乘法</h3></p>
+<p>**公式**: $(AB)_{ij} = \sum_{k=1}^{n} A_{ik}B_{kj}$</p>
+<p>**变量说明**:
+<ul><li>$A,B$: 矩阵</li></ul>
+<ul><li>$i,j$: 行列索引</li></ul>
+<ul><li>$n$: 矩阵维数</p></li></ul>
+<p>**使用场景**:
+<ul><li>线性变换复合</li></ul>
+<ul><li>方程组求解</p></li></ul>
+<p>**常见变形**:
+<ul><li>$C = AB$</p></li></ul>
+<p>---</p>
+<p></p>
+<p><h2>📝 标准例题</h2></p>
+<p>> 🎯 **练习目标**: 熟练掌握解题步骤和思路</p>
+<p><h3>例题 1 (行列式计算)</h3></p>
+<p>**📋 题目**: 计算矩阵 A = [[2,3],[1,4]] 的行列式</p>
+<p>**📝 解题步骤**:
+1. 使用2×2行列式公式: det(A) = ad - bc
+2. 识别矩阵元素: a=2, b=3, c=1, d=4
+3. 代入公式: det(A) = 2×4 - 3×1
+4. 计算结果: det(A) = 8 - 3 = 5</p>
+<p>**💡 关键思路**: 2×2行列式就是主对角线乘积减去副对角线乘积</p>
+<p>**⚠️ 常见错误**:
+<ul><li>符号搞错</li></ul>
+<ul><li>元素位置混淆</p></li></ul>
+<p>---</p>
+<p><h3>例题 2 (矩阵乘法)</h3></p>
+<p>**📋 题目**: 计算 [[1,2],[3,4]] × [[2,0],[1,3]]</p>
+<p>**📝 解题步骤**:
+1. 使用矩阵乘法定义 (AB)ij = Σ(Aik × Bkj)
+2. 计算(1,1)位置: 1×2 + 2×1 = 4
+3. 计算(1,2)位置: 1×0 + 2×3 = 6
+4. 计算(2,1)位置: 3×2 + 4×1 = 10
+5. 计算(2,2)位置: 3×0 + 4×3 = 12
+6. 结果矩阵: [[4,6],[10,12]]</p>
+<p>**💡 关键思路**: 矩阵乘法是行×列的内积运算</p>
+<p>**⚠️ 常见错误**:
+<ul><li>维度不匹配</li></ul>
+<ul><li>计算顺序错误</li></ul>
+<ul><li>内积计算错误</p></li></ul>
+<p>---</p>
+<p></p>
+<p><h2>🚀 实战技巧</h2></p>
+<p>> 💪 **做题必备**: 掌握这些技巧，提高解题效率</p>
+<p>1. **做题前先检查矩阵维度是否匹配**</p>
+<p>2. **行列式计算要注意正负号**</p>
+<p>3. **矩阵乘法不满足交换律，注意顺序**</p>
+<p>4. **复杂计算可以分步进行，避免一步到位**</p>
+<p></p>
+</body>
+</html>
